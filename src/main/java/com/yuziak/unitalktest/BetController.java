@@ -12,7 +12,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @RestController
 public class BetController {
 
-    private static final BigDecimal MAX_SINGLE_BET = new BigDecimal("1000000000"); // 1 млрд
+    private static final BigDecimal MAX_SINGLE_BET = new BigDecimal("1000000"); 
     private static final BigDecimal MAX_TOTAL_PER_CAR = new BigDecimal("1000000000");
 
     private final Map<Car, BigDecimal> bets = new ConcurrentHashMap<>();
