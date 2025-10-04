@@ -30,10 +30,10 @@ public class BetControllerTest {
         bets.clear();
     }
 
-    private void performPostBet(String auto, int amount, String expectedResponse) throws Exception {
+    private void performPostBet(String auto, String amount, String expectedResponse) throws Exception {
         mockMvc.perform(post("/bet")
                         .param("auto", auto)
-                        .param("amount", String.valueOf(amount)))
+                        .param("amount", amount))
                 .andExpect(status().isOk())
                 .andExpect(content().string(expectedResponse));
     }
@@ -45,35 +45,50 @@ public class BetControllerTest {
                 .andExpect(content().string(expectedResponsePart));
     }
 
-    private void performGetAllStatsCheck(String... expectedParts) throws Exception {
-        var request = mockMvc.perform(get("/stats"))
-                .andExpect(status().isOk());
-
-        for (String part : expectedParts) {
-            request.andExpect(content().string(containsString(part)));
-        }
-    }
-
     @Test
     void testPlaceBet_validCar() throws Exception {
-        performPostBet("BMW", 100, "Placed $100 on BMW");
+        performPostBet("BMW", "100.50", "Placed $100.50 on BMW");
     }
 
     @Test
     void testPlaceBet_invalidCar() throws Exception {
-        performPostBet("TESLA", 100, "Invalid auto");
+        performPostBet("TESLA", "100", "Invalid auto");
+    }
+
+    @Test
+    void testRejectNegativeBet() throws Exception {
+        performPostBet("AUDI", "-50", "Bet amount must be positive");
+    }
+
+    @Test
+    void testRejectZeroBet() throws Exception {
+        performPostBet("HONDA", "0", "Bet amount must be positive");
+    }
+
+    @Test
+    void testRejectBetAboveLimit() throws Exception {
+        performPostBet("FERRARI", "1000000001", "Bet exceeds the limit of $1000000000");
+    }
+
+    @Test
+    void testRejectTotalExceedsLimit() throws Exception {
+        performPostBet("BMW", "900000000", "Placed $900000000 on BMW");
+        performPostBet("BMW", "200000000", "Total bets for BMW exceed the limit of $1000000000");
     }
 
     @Test
     void testGetStatsForSpecificCar() throws Exception {
-        performPostBet("AUDI", 50, "Placed $50 on AUDI");
-        performGetStats("AUDI", "AUDI: $50");
+        performPostBet("AUDI", "50.25", "Placed $50.25 on AUDI");
+        performGetStats("AUDI", "AUDI: $50.25");
     }
 
     @Test
     void testGetStatsAllCars() throws Exception {
-        performPostBet("BMW", 200, "Placed $200 on BMW");
-        performPostBet("FERRARI", 300, "Placed $300 on FERRARI");
-        performGetAllStatsCheck("BMW: $200", "FERRARI: $300");
+        performPostBet("BMW", "200.10", "Placed $200.10 on BMW");
+        performPostBet("FERRARI", "300.90", "Placed $300.90 on FERRARI");
+        mockMvc.perform(get("/stats"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("BMW: $200.10")))
+                .andExpect(content().string(containsString("FERRARI: $300.90")));
     }
 }
