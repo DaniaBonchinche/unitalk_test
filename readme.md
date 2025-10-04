@@ -15,11 +15,11 @@ Place a bet on a specific car.
 | Name | Type | Required | Description |  
 |------|------|-----------|-------------|  
 | `auto` | `String` | ✅ | Car name (`FERRARI`, `BMW`, `AUDI`, `HONDA`) |  
-| `amount` | `BigDecimal` | ✅ | Bet amount (> 0 and ≤ 1,000,000,000) |  
+| `amount` | `BigDecimal` | ✅ | Bet amount (> 0 and ≤ 1,000,000) |  
 
 **Validation Rules**  
 ❌ Negative or zero bets are not allowed  
-❌ A single bet cannot exceed 1,000,000,000  
+❌ A single bet cannot exceed 1,000,000  
 ❌ The total bets for a single car cannot exceed 1,000,000,000  
 ✅ Uses BigDecimal for precise calculations  
 
