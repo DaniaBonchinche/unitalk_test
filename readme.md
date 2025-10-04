@@ -1,7 +1,7 @@
 #  UniTalkTest Betting API
 
 A small Spring Boot REST project that demonstrates a simple betting system for cars.  
-It supports placing bets, viewing statistics, and includes validation for bet limits and input correctness.
+It supports placing bets, viewing statistics, and includes validation for bet limits.
 
 ---
 
