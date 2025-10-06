@@ -12,7 +12,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @RestController
 public class BetController {
 
-    private static final BigDecimal MAX_SINGLE_BET = new BigDecimal("1000000"); 
+    private static final BigDecimal MAX_SINGLE_BET = new BigDecimal("1000000");
     private static final BigDecimal MAX_TOTAL_PER_CAR = new BigDecimal("1000000000");
 
     private final Map<Car, BigDecimal> bets = new ConcurrentHashMap<>();
@@ -32,16 +32,24 @@ public class BetController {
         }
 
         Car car = Car.fromString(auto);
-        BigDecimal current = bets.getOrDefault(car, BigDecimal.ZERO);
-        BigDecimal newTotal = current.add(amount);
+        try {
+            bets.compute(car, (key, current) -> {
+                BigDecimal currentValue = (current == null) ? BigDecimal.ZERO : current;
+                BigDecimal newTotal = currentValue.add(amount);
 
-        if (newTotal.compareTo(MAX_TOTAL_PER_CAR) > 0) {
-            return "Total bets for " + car.name() + " exceed the limit of $" + MAX_TOTAL_PER_CAR;
+                if (newTotal.compareTo(MAX_TOTAL_PER_CAR) > 0) {
+                    throw new IllegalStateException(
+                            "Total bets for " + car.name() + " exceed the limit of $" + MAX_TOTAL_PER_CAR
+                    );
+                }
+                return newTotal;
+            });
+            return "Placed $" + amount + " on " + car.name();
+        } catch (IllegalStateException e) {
+            return e.getMessage();
         }
-
-        bets.put(car, newTotal);
-        return "Placed $" + amount + " on " + car.name();
     }
+
 
     @GetMapping("/stats")
     public String getStats(@RequestParam(required = false) String auto) {

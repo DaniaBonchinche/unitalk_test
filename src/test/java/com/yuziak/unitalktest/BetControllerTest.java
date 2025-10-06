@@ -8,6 +8,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.lang.reflect.Field;
 import java.util.Map;
+import java.util.stream.IntStream;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -67,13 +68,15 @@ public class BetControllerTest {
 
     @Test
     void testRejectBetAboveLimit() throws Exception {
-        performPostBet("FERRARI", "1000000001", "Bet exceeds the limit of $1000000000");
+        performPostBet("FERRARI", "1000000001", "Bet exceeds the limit of $1000000");
     }
 
     @Test
     void testRejectTotalExceedsLimit() throws Exception {
-        performPostBet("BMW", "900000000", "Placed $900000000 on BMW");
-        performPostBet("BMW", "200000000", "Total bets for BMW exceed the limit of $1000000000");
+        for (int i = 0; i < 1000; i++) {
+            performPostBet("BMW", "1000000", "Placed $1000000 on BMW");
+        }
+        performPostBet("BMW", "1", "Total bets for BMW exceed the limit of $1000000000");
     }
 
     @Test
@@ -90,5 +93,17 @@ public class BetControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("BMW: $200.10")))
                 .andExpect(content().string(containsString("FERRARI: $300.90")));
+    }
+
+    @Test
+    void threadSafeTest() throws Exception {
+        IntStream.range(0, 1000).parallel().forEach(i -> {
+            try {
+                performPostBet("BMW", "1", "Placed $1 on BMW");
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
+        performGetStats("BMW", "BMW: $1000");
     }
 }
